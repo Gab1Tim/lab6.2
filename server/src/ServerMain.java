@@ -1,6 +1,7 @@
 package server;
 
 import common.network.CommandType;
+
 import server.commands.*;
 import server.managers.CollectionManager;
 import server.managers.CommandManager;
