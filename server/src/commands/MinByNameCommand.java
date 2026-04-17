@@ -2,11 +2,9 @@ package server.commands;
 
 import common.models.Organization;
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 public class MinByNameCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public MinByNameCommand(CollectionManager collectionManager) {
@@ -24,11 +22,11 @@ public class MinByNameCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
+    public CommandResult execute(Request request) {
         Organization org = collectionManager.getMinByName();
         if (org == null) {
-            return new Response(true, "Collection is empty.");
+            return new CommandResult(true, "Collection is empty.");
         }
-        return new Response(true, org.toString());
+        return new CommandResult(true, org.toString());
     }
 }

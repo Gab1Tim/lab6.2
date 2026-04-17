@@ -1,11 +1,9 @@
 package server.commands;
 
 import common.network.Request;
-import common.network.Response;
 import server.managers.CommandManager;
 
 public class HelpCommand implements Command {
-
     private final CommandManager commandManager;
 
     public HelpCommand(CommandManager commandManager) {
@@ -23,7 +21,7 @@ public class HelpCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
-        return new Response(true, commandManager.getAllCommandsInfo());
+    public CommandResult execute(Request request) {
+        return new CommandResult(true, commandManager.getAllCommandsInfo());
     }
 }

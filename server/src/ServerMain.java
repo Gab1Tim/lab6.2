@@ -1,17 +1,19 @@
 package server;
 
+import common.config.AppConfig;
 import common.network.CommandType;
-
 import server.commands.*;
 import server.managers.CollectionManager;
 import server.managers.CommandManager;
 
 public class ServerMain {
 
-    private static final int DEFAULT_PORT = 5000;
-
     public static void main(String[] args) {
         String fileName = System.getenv("ORGANIZATION_FILE");
+        AppConfig config = new AppConfig("config.properties");
+
+        int port = config.getInt("server.port");
+        int bufferSize = config.getInt("server.bufferSize");
 
         CollectionManager collectionManager = new CollectionManager(fileName);
         CommandManager commandManager = new CommandManager();
@@ -39,9 +41,9 @@ public class ServerMain {
         commandManager.registerCommand(CommandType.HELP, new HelpCommand(commandManager));
 
         RequestHandler requestHandler = new RequestHandler(commandManager);
-        UdpServer udpServer = new UdpServer(DEFAULT_PORT, requestHandler);
+        UdpServer udpServer = new UdpServer(port, bufferSize, requestHandler);
 
-        System.out.println("Server started on port " + DEFAULT_PORT);
+        System.out.println("Server started on port " + port);
         udpServer.start();
     }
 }

@@ -1,14 +1,12 @@
 package server.commands;
 
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PrintUniqueAnnualTurnoverCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public PrintUniqueAnnualTurnoverCommand(CollectionManager collectionManager) {
@@ -26,21 +24,20 @@ public class PrintUniqueAnnualTurnoverCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
+    public CommandResult execute(Request request) {
         try {
             Set<Integer> values = collectionManager.getUniqueAnnualTurnovers();
-
             if (values.isEmpty()) {
-                return new Response(true, "Collection is empty.");
+                return new CommandResult(true, "Collection is empty.");
             }
 
             String message = values.stream()
                     .map(String::valueOf)
                     .collect(Collectors.joining("\n"));
 
-            return new Response(true, message);
+            return new CommandResult(true, message);
         } catch (Exception e) {
-            return new Response(false, "Error: " + e.getMessage());
+            return new CommandResult(false, "Error: " + e.getMessage());
         }
     }
 }

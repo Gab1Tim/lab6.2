@@ -5,20 +5,23 @@ import client.commands.ExitCommand;
 import client.commands.HistoryCommand;
 import client.managers.ClientCommandManager;
 import client.managers.InputManager;
+import common.config.AppConfig;
 import common.network.Request;
 import common.network.Response;
 
 public class Client {
-
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 5000;
-
     private final ClientCommandManager clientCommandManager;
     private final UdpClient udpClient;
 
-    public Client() {
+    public Client(AppConfig config) {
         this.clientCommandManager = new ClientCommandManager();
-        this.udpClient = new UdpClient(DEFAULT_HOST, DEFAULT_PORT);
+
+        String host = config.getString("client.host");
+        int port = config.getInt("client.port");
+        int bufferSize = config.getInt("client.bufferSize");
+        int timeoutMillis = config.getInt("client.timeoutMillis");
+
+        this.udpClient = new UdpClient(host, port, bufferSize, timeoutMillis);
         registerLocalCommands();
     }
 
@@ -30,26 +33,17 @@ public class Client {
 
     public void run() {
         System.out.println("Welcome! Type commands:");
-
         while (true) {
             String inputLine = InputManager.readLine("> ");
-            if (inputLine == null) {
-                break;
-            }
-
+            if (inputLine == null) break;
             processInputLine(inputLine);
         }
     }
 
     public void processInputLine(String inputLine) {
-        if (inputLine == null) {
-            return;
-        }
-
+        if (inputLine == null) return;
         inputLine = inputLine.trim();
-        if (inputLine.isEmpty()) {
-            return;
-        }
+        if (inputLine.isEmpty()) return;
 
         String commandName = inputLine.split("\\s+", 2)[0];
 
@@ -67,7 +61,6 @@ public class Client {
 
     private void sendCommandToServer(String commandName) {
         Request request = RequestFactory.buildRequest(commandName);
-
         if (request == null) {
             System.out.println("Unknown command or invalid arguments.");
             return;
@@ -81,10 +74,9 @@ public class Client {
         System.out.println("Local commands:");
         System.out.println("help - Displays help");
         System.out.println("history - Displays last 12 commands");
-        System.out.println("execute_script file_name - Executes commands from file");
+        System.out.println("execute_script filename - Executes commands from file");
         System.out.println("exit - Exits the program");
-
-        System.out.println("\nServer commands:");
+        System.out.println("Server commands:");
         sendCommandToServer("help");
     }
 }

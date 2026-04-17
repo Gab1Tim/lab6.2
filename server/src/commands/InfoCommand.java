@@ -1,11 +1,9 @@
 package server.commands;
 
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 public class InfoCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public InfoCommand(CollectionManager collectionManager) {
@@ -23,7 +21,7 @@ public class InfoCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
-        return new Response(true, collectionManager.getInfoData());
+    public CommandResult execute(Request request) {
+        return new CommandResult(true, collectionManager.getInfoData());
     }
 }

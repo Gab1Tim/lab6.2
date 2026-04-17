@@ -2,11 +2,9 @@ package server.commands;
 
 import common.models.Organization;
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 public class RemoveLowerCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public RemoveLowerCommand(CollectionManager collectionManager) {
@@ -24,18 +22,17 @@ public class RemoveLowerCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
+    public CommandResult execute(Request request) {
         try {
             Organization reference = request.getOrganization();
-
             if (reference == null) {
-                return new Response(false, "Reference organization is required.");
+                return new CommandResult(false, "Reference organization is required.");
             }
 
             int removed = collectionManager.removeLower(reference);
-            return new Response(true, removed + " elements removed.");
+            return new CommandResult(true, removed + " elements removed.");
         } catch (Exception e) {
-            return new Response(false, "Error: " + e.getMessage());
+            return new CommandResult(false, "Error: " + e.getMessage());
         }
     }
 }

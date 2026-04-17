@@ -9,30 +9,30 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 public class UdpClient {
-
     private final String host;
     private final int port;
-    private static final int BUFFER_SIZE = 65535;
-    private static final int TIMEOUT_MILLIS = 3000;
+    private final int bufferSize;
+    private final int timeoutMillis;
 
-    public UdpClient(String host, int port) {
+    public UdpClient(String host, int port, int bufferSize, int timeoutMillis) {
         this.host = host;
         this.port = port;
+        this.bufferSize = bufferSize;
+        this.timeoutMillis = timeoutMillis;
     }
 
     public Response sendAndReceive(Request request) {
         try (DatagramChannel channel = DatagramChannel.open()) {
             channel.configureBlocking(false);
-
             InetSocketAddress serverAddress = new InetSocketAddress(host, port);
 
             byte[] requestBytes = Serializer.serialize(request);
             channel.send(ByteBuffer.wrap(requestBytes), serverAddress);
 
-            ByteBuffer receiveBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+            ByteBuffer receiveBuffer = ByteBuffer.allocate(bufferSize);
             long start = System.currentTimeMillis();
 
-            while (System.currentTimeMillis() - start < TIMEOUT_MILLIS) {
+            while (System.currentTimeMillis() - start < timeoutMillis) {
                 receiveBuffer.clear();
                 InetSocketAddress sender = (InetSocketAddress) channel.receive(receiveBuffer);
 

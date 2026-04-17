@@ -2,11 +2,9 @@ package server.commands;
 
 import common.models.Organization;
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 public class UpdateCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public UpdateCommand(CollectionManager collectionManager) {
@@ -24,22 +22,22 @@ public class UpdateCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
+    public CommandResult execute(Request request) {
         try {
             Long id = request.getId();
             Organization organization = request.getOrganization();
 
             if (id == null) {
-                return new Response(false, "Id is required.");
+                return new CommandResult(false, "Id is required.");
             }
             if (organization == null) {
-                return new Response(false, "Organization is required.");
+                return new CommandResult(false, "Organization is required.");
             }
 
             collectionManager.update(id, organization);
-            return new Response(true, "Organization updated successfully.");
+            return new CommandResult(true, "Organization updated successfully.");
         } catch (Exception e) {
-            return new Response(false, "Error: " + e.getMessage());
+            return new CommandResult(false, "Error: " + e.getMessage());
         }
     }
 }

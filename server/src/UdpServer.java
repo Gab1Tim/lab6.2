@@ -3,43 +3,48 @@ package server;
 import common.network.Request;
 import common.network.Response;
 import common.network.Serializer;
-import server.RequestHandler;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 
 public class UdpServer {
-
     private final int port;
+    private final int bufferSize;
     private final RequestHandler requestHandler;
-    private static final int BUFFER_SIZE = 65535;
 
-    public UdpServer(int port, RequestHandler requestHandler) {
+    public UdpServer(int port, int bufferSize, RequestHandler requestHandler) {
         this.port = port;
+        this.bufferSize = bufferSize;
         this.requestHandler = requestHandler;
     }
 
     public void start() {
-        try (DatagramSocket socket = new DatagramSocket(port)) {
+        try (DatagramChannel channel = DatagramChannel.open()) {
+            channel.configureBlocking(false);
+            channel.bind(new InetSocketAddress(port));
+
             System.out.println("UDP server is listening on port " + port);
 
+            ByteBuffer receiveBuffer = ByteBuffer.allocate(bufferSize);
+
             while (true) {
-                byte[] receiveBuffer = new byte[BUFFER_SIZE];
-                DatagramPacket requestPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-                socket.receive(requestPacket);
+                receiveBuffer.clear();
+
+                InetSocketAddress clientAddress =
+                        (InetSocketAddress) channel.receive(receiveBuffer);
+
+                if (clientAddress == null) {
+                    Thread.sleep(10);
+                    continue;
+                }
 
                 Response response;
 
                 try {
-                    byte[] requestBytes = new byte[requestPacket.getLength()];
-                    System.arraycopy(
-                            requestPacket.getData(),
-                            requestPacket.getOffset(),
-                            requestBytes,
-                            0,
-                            requestPacket.getLength()
-                    );
+                    receiveBuffer.flip();
+                    byte[] requestBytes = new byte[receiveBuffer.remaining()];
+                    receiveBuffer.get(requestBytes);
 
                     Request request = (Request) Serializer.deserialize(requestBytes);
                     response = requestHandler.handle(request);
@@ -53,21 +58,14 @@ public class UdpServer {
 
                 try {
                     byte[] responseBytes = Serializer.serialize(response);
-                    DatagramPacket responsePacket = new DatagramPacket(
-                            responseBytes,
-                            responseBytes.length,
-                            requestPacket.getAddress(),
-                            requestPacket.getPort()
-                    );
-                    socket.send(responsePacket);
+                    ByteBuffer sendBuffer = ByteBuffer.wrap(responseBytes);
+                    channel.send(sendBuffer, clientAddress);
                 } catch (Exception e) {
                     System.err.println("Failed to send response: " + e.getMessage());
                 }
             }
-        } catch (SocketException e) {
-            throw new RuntimeException("Could not start UDP server on port " + port, e);
         } catch (Exception e) {
-            throw new RuntimeException("Unexpected server error: " + e.getMessage(), e);
+            throw new RuntimeException("Could not start UDP server on port " + port, e);
         }
     }
 }

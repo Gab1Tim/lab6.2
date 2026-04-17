@@ -3,6 +3,7 @@ package server;
 import common.network.Request;
 import common.network.Response;
 import server.managers.CommandManager;
+import server.commands.CommandResult;
 
 public class RequestHandler {
 
@@ -13,6 +14,7 @@ public class RequestHandler {
     }
 
     public Response handle(Request request) {
-        return commandManager.execute(request);
+        CommandResult result = commandManager.execute(request);
+        return new Response(result.isSuccess(), result.getMessage());
     }
 }

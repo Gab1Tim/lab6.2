@@ -1,11 +1,9 @@
 package server.commands;
 
 import common.network.Request;
-import common.network.Response;
 import server.managers.CollectionManager;
 
 public class RemoveKeyCommand implements Command {
-
     private final CollectionManager collectionManager;
 
     public RemoveKeyCommand(CollectionManager collectionManager) {
@@ -23,18 +21,17 @@ public class RemoveKeyCommand implements Command {
     }
 
     @Override
-    public Response execute(Request request) {
+    public CommandResult execute(Request request) {
         try {
             Integer key = request.getKey();
-
             if (key == null) {
-                return new Response(false, "Key is required.");
+                return new CommandResult(false, "Key is required.");
             }
 
             collectionManager.remove(key);
-            return new Response(true, "Element with key " + key + " removed successfully.");
+            return new CommandResult(true, "Element with key " + key + " removed successfully.");
         } catch (Exception e) {
-            return new Response(false, "Error: " + e.getMessage());
+            return new CommandResult(false, "Error: " + e.getMessage());
         }
     }
 }
