@@ -1,4 +1,4 @@
-package server;
+package server.connection;
 
 import common.network.Request;
 import common.network.Response;

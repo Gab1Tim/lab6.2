@@ -1,6 +1,6 @@
 package client.commands;
 
-import client.Client;
+import client.connection.Client;
 import client.managers.InputManager;
 
 import java.io.File;

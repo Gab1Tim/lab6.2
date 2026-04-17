@@ -1,4 +1,4 @@
-package client;
+package client.connection;
 
 import client.commands.ExecuteScriptCommand;
 import client.commands.ExitCommand;

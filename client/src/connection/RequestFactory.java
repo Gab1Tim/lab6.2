@@ -1,4 +1,4 @@
-package client;
+package client.connection;
 
 import client.managers.InputManager;
 import common.models.Organization;

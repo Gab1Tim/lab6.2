@@ -1,5 +1,6 @@
 package client;
 
+import client.connection.Client;
 import common.config.AppConfig;
 
 public class ClientMain {

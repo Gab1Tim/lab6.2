@@ -3,42 +3,64 @@ package server;
 import common.config.AppConfig;
 import common.network.CommandType;
 import server.commands.*;
+import server.connection.RequestHandler;
+import server.connection.UdpServer;
 import server.managers.CollectionManager;
+import server.managers.CollectionPersistenceManager;
 import server.managers.CommandManager;
 
 public class ServerMain {
-
     public static void main(String[] args) {
         String fileName = System.getenv("ORGANIZATION_FILE");
-        AppConfig config = new AppConfig("config.properties");
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalStateException("ORGANIZATION_FILE environment variable is not set");
+        }
 
+        AppConfig config = new AppConfig("config.properties");
         int port = config.getInt("server.port");
         int bufferSize = config.getInt("server.bufferSize");
 
-        CollectionManager collectionManager = new CollectionManager(fileName);
+        CollectionPersistenceManager persistenceManager =
+                new CollectionPersistenceManager(fileName);
+
+        CollectionManager collectionManager =
+                new CollectionManager(persistenceManager.loadCollection());
+
         CommandManager commandManager = new CommandManager();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                collectionManager.saveSafely();
+                persistenceManager.saveSafely(collectionManager.getCollection());
                 System.out.println("Collection saved. Server is shutting down.");
             } catch (Exception e) {
                 System.out.println("Shutdown save error: " + e.getMessage());
             }
         }));
 
-        commandManager.registerCommand(CommandType.INSERT, new InsertCommand(collectionManager));
-        commandManager.registerCommand(CommandType.SHOW, new ShowCommand(collectionManager));
-        commandManager.registerCommand(CommandType.INFO, new InfoCommand(collectionManager));
-        commandManager.registerCommand(CommandType.REMOVE_KEY, new RemoveKeyCommand(collectionManager));
-        commandManager.registerCommand(CommandType.CLEAR, new ClearCommand(collectionManager));
-        commandManager.registerCommand(CommandType.UPDATE, new UpdateCommand(collectionManager));
-        commandManager.registerCommand(CommandType.REMOVE_GREATER_KEY, new RemoveGreaterKeyCommand(collectionManager));
-        commandManager.registerCommand(CommandType.MIN_BY_NAME, new MinByNameCommand(collectionManager));
-        commandManager.registerCommand(CommandType.FILTER_GREATER_THAN_TYPE, new FilterGreaterThanTypeCommand(collectionManager));
-        commandManager.registerCommand(CommandType.PRINT_UNIQUE_ANNUAL_TURNOVER, new PrintUniqueAnnualTurnoverCommand(collectionManager));
-        commandManager.registerCommand(CommandType.REMOVE_LOWER, new RemoveLowerCommand(collectionManager));
-        commandManager.registerCommand(CommandType.HELP, new HelpCommand(commandManager));
+        commandManager.registerCommand(CommandType.INSERT,
+                new InsertCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.SHOW,
+                new ShowCommand(collectionManager));
+        commandManager.registerCommand(CommandType.INFO,
+                new InfoCommand(collectionManager));
+        commandManager.registerCommand(CommandType.REMOVE_KEY,
+                new RemoveKeyCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.CLEAR,
+                new ClearCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.UPDATE,
+                new UpdateCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.REMOVE_GREATER_KEY,
+                new RemoveGreaterKeyCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.MIN_BY_NAME,
+                new MinByNameCommand(collectionManager));
+        commandManager.registerCommand(CommandType.FILTER_GREATER_THAN_TYPE,
+                new FilterGreaterThanTypeCommand(collectionManager));
+        commandManager.registerCommand(CommandType.PRINT_UNIQUE_ANNUAL_TURNOVER,
+                new PrintUniqueAnnualTurnoverCommand(collectionManager));
+        commandManager.registerCommand(CommandType.REMOVE_LOWER,
+                new RemoveLowerCommand(collectionManager, persistenceManager));
+        commandManager.registerCommand(CommandType.HELP,
+                new HelpCommand(commandManager));
 
         RequestHandler requestHandler = new RequestHandler(commandManager);
         UdpServer udpServer = new UdpServer(port, bufferSize, requestHandler);
